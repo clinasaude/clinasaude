@@ -18,7 +18,7 @@ export const Route = createFileRoute("/entrar")({
 type Mode = "login" | "signup" | "reset" | "new-password";
 
 function Login() {
-  const { user, profile, loading: authLoading, configured, signIn, signUp, resetPassword, updatePassword } = useAuth();
+  const { user, profile, loading: authLoading, configured, signIn, signInWithGoogle, signUp, resetPassword, updatePassword } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("login");
   const [fullName, setFullName] = useState("");
@@ -96,6 +96,7 @@ function Login() {
               {mode === "login" ? "Entrar com segurança" : mode === "signup" ? "Criar conta de paciente" : mode === "new-password" ? "Salvar nova senha" : "Enviar instruções"}
             </Button>
           </form>
+          {mode === "login" && <><div className="my-4 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border"/><span>ou</span><span className="h-px flex-1 bg-border"/></div><Button type="button" variant="outline" className="w-full rounded-full" disabled={!configured || busy} onClick={() => void signInWithGoogle().catch(e => toast.error(e instanceof Error ? e.message : "Não foi possível entrar com Google."))}>Continuar com Google</Button></>}
           <div className="mt-5 flex flex-col gap-3 text-center text-sm">
             {mode === "login" && <><button onClick={() => setMode("reset")} className="text-muted-foreground underline">Esqueci minha senha</button><button onClick={() => setMode("signup")} className="font-semibold text-primary">Ainda não tenho conta · Criar cadastro</button></> }
             {mode !== "login" && <button onClick={() => setMode("login")} className="text-primary underline">Voltar para entrar</button>}
