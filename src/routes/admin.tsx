@@ -8,7 +8,7 @@ import {listPendingProfessionals,reviewProfessional} from "@/lib/clina-data";
 import type {PendingProfessional} from "@/lib/clina-types";
 import {Button} from "@/components/ui/button";
 export const Route=createFileRoute("/admin")({head:()=>({meta:[{title:"Super Painel — CLINA"}]}),component:Admin});
-function Admin(){const[tab,setTab]=useState("valid"),[queue,setQueue]=useState<any[]>([]),[loading,setLoading]=useState(true);
+function Admin(){const[tab,setTab]=useState("valid"),[queue,setQueue]=useState<PendingProfessional[]>([]),[loading,setLoading]=useState(true);
  async function reload(){setLoading(true);try{setQueue(await listPendingProfessionals())}catch(e){toast.error(e instanceof Error?e.message:"Falha ao carregar fila de validação.")}finally{setLoading(false)}}
  useEffect(()=>{void reload()},[]);
  async function decide(id:string,approved:boolean){try{await reviewProfessional(id,approved,approved?undefined:"Documentação não validada. Entre em contato para regularização.");toast.success(approved?"Profissional aprovado.":"Cadastro recusado.");await reload()}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível atualizar o cadastro.")}}
