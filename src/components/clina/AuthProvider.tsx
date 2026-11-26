@@ -1,124 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-
-export type AppRole = "patient" | "professional" | "admin";
-type Profile = { id: string; full_name: string; role: AppRole };
-type AuthContextValue = {
-  session: Session | null;
-  user: User | null;
-  profile: Profile | null;
-  loading: boolean;
-  configured: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (input: { fullName: string; phone?: string; email: string; password: string }) => Promise<boolean>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refreshProfile = useCallback(async () => {
-    if (!supabase) { setProfile(null); return; }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setProfile(null); return; }
-    const { data, error } = await supabase.from("profiles").select("id, full_name, role").eq("id", user.id).maybeSingle();
-    if (error) throw error;
-    setProfile(data as Profile | null);
-  }, []);
-
-  useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
-    let alive = true;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!alive) return;
-      setSession(nextSession);
-      if (!nextSession) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-      // Defer Supabase queries until after the auth callback releases its internal lock.
-      window.setTimeout(() => {
-        void refreshProfile().catch((error) => console.error("CLINA profile load failed", error)).finally(() => {
-          if (alive) setLoading(false);
-        });
-      }, 0);
-    });
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (error) throw error;
-      if (alive) setSession(data.session);
-      if (!data.session) {
-        if (alive) setLoading(false);
-      } else {
-        void refreshProfile().catch((err) => console.error("CLINA profile load failed", err)).finally(() => {
-          if (alive) setLoading(false);
-        });
-      }
-    }).catch((error) => {
-      console.error("CLINA session restore failed", error);
-      if (alive) setLoading(false);
-    });
-    return () => { alive = false; subscription.unsubscribe(); };
-  }, [refreshProfile]);
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) throw error;
-  }, []);
-
-  const signUp = useCallback(async ({ fullName, phone, email, password }: { fullName: string; phone?: string; email: string; password: string }) => {
-    if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: { full_name: fullName.trim(), ...(phone?.trim() ? { phone: phone.trim() } : {}) },
-        ...(typeof window !== "undefined" ? { emailRedirectTo: `${window.location.origin}/entrar` } : {}),
-      },
-    });
-    if (error) throw error;
-    return Boolean(data.session);
-  }, []);
-
-  const resetPassword = useCallback(async (email: string) => {
-    if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      ...(typeof window !== "undefined" ? { redirectTo: `${window.location.origin}/entrar?redefinir=1` } : {}),
-    });
-    if (error) throw error;
-  }, []);
-
-  const updatePassword = useCallback(async (password: string) => {
-    if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-  }, []);
-
-  const signOut = useCallback(async () => {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  }, []);
-
-  const value = useMemo<AuthContextValue>(() => ({
-    session, user: session?.user ?? null, profile, loading, configured: isSupabaseConfigured,
-    signIn, signUp, resetPassword, updatePassword, signOut, refreshProfile,
-  }), [session, profile, loading, signIn, signUp, resetPassword, updatePassword, signOut, refreshProfile]);
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+import { createContext,useCallback,useContext,useEffect,useMemo,useState,type ReactNode } from "react";
+import type { Session,User } from "@supabase/supabase-js";
+import {supabase,isSupabaseConfigured} from "@/lib/supabase";
+export type AppRole="patient"|"professional"|"admin";
+type Profile={id:string;full_name:string;role:AppRole};
+type AuthContextValue={session:Session|null;user:User|null;profile:Profile|null;loading:boolean;configured:boolean;signIn:(email:string,password:string)=>Promise<void>;signInWithGoogle:()=>Promise<void>;signUp:(input:{fullName:string;phone?:string;email:string;password:string})=>Promise<boolean>;resetPassword:(email:string)=>Promise<void>;updatePassword:(password:string)=>Promise<void>;signOut:()=>Promise<void>;refreshProfile:()=>Promise<void>};
+const AuthContext=createContext<AuthContextValue|null>(null);
+export function AuthProvider({children}:{children:ReactNode}){
+ const[session,setSession]=useState<Session|null>(null),[profile,setProfile]=useState<Profile|null>(null),[loading,setLoading]=useState(true);
+ const refreshProfile=useCallback(async()=>{if(!supabase){setProfile(null);return;}const{data:{user}}=await supabase.auth.getUser();if(!user){setProfile(null);return;}const{data,error}=await supabase.from("profiles").select("id,full_name,role").eq("id",user.id).maybeSingle();if(error)throw error;setProfile(data as Profile|null);},[]);
+ useEffect(()=>{if(!supabase){setLoading(false);return;}let alive=true;const{data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>{if(!alive)return;setSession(s);if(!s){setProfile(null);setLoading(false);return;}window.setTimeout(()=>{void refreshProfile().catch(e=>console.error("CLINA profile load failed",e)).finally(()=>{if(alive)setLoading(false);});},0);});void supabase.auth.getSession().then(({data,error})=>{if(error)throw error;if(alive)setSession(data.session);if(!data.session){if(alive)setLoading(false);}else void refreshProfile().catch(e=>console.error("CLINA profile load failed",e)).finally(()=>{if(alive)setLoading(false);});}).catch(e=>{console.error("CLINA session restore failed",e);if(alive)setLoading(false);});return()=>{alive=false;subscription.unsubscribe();};},[refreshProfile]);
+ const signIn=useCallback(async(email:string,password:string)=>{if(!supabase)throw new Error("Autenticação indisponível.");const{error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;},[]);
+ const signInWithGoogle=useCallback(async()=>{if(!supabase)throw new Error("Autenticação indisponível.");const{error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:typeof window!=="undefined"?window.location.origin+"/entrar":undefined,queryParams:{access_type:"offline",prompt:"consent"}}});if(error)throw error;},[]);
+ const signUp=useCallback(async({fullName,phone,email,password}:{fullName:string;phone?:string;email:string;password:string})=>{if(!supabase)throw new Error("Autenticação indisponível.");const{data,error}=await supabase.auth.signUp({email:email.trim(),password,options:{data:{full_name:fullName.trim(),...(phone?.trim()?{phone:phone.trim()}:{})},...(typeof window!=="undefined"?{emailRedirectTo:window.location.origin+"/entrar"}:{})}});if(error)throw error;return Boolean(data.session);},[]);
+ const resetPassword=useCallback(async(email:string)=>{if(!supabase)throw new Error("Autenticação indisponível.");const{error}=await supabase.auth.resetPasswordForEmail(email.trim(),{...(typeof window!=="undefined"?{redirectTo:window.location.origin+"/entrar?redefinir=1"}:{})});if(error)throw error;},[]);
+ const updatePassword=useCallback(async(password:string)=>{if(!supabase)throw new Error("Autenticação indisponível.");const{error}=await supabase.auth.updateUser({password});if(error)throw error;},[]);
+ const signOut=useCallback(async()=>{if(!supabase)return;const{error}=await supabase.auth.signOut();if(error)throw error;},[]);
+ const value=useMemo<AuthContextValue>(()=>({session,user:session?.user??null,profile,loading,configured:isSupabaseConfigured,signIn,signInWithGoogle,signUp,resetPassword,updatePassword,signOut,refreshProfile}),[session,profile,loading,signIn,signInWithGoogle,signUp,resetPassword,updatePassword,signOut,refreshProfile]);
+ return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-export function useAuth() {
-  const value = useContext(AuthContext);
-  if (!value) throw new Error("useAuth must be used within AuthProvider");
-  return value;
-}
+export function useAuth(){const value=useContext(AuthContext);if(!value)throw new Error("useAuth must be used within AuthProvider");return value;}
