@@ -28,8 +28,9 @@ function Login() {
   const [busy, setBusy] = useState(false);
 
   const goToPortal = (role?: string) => {
-    const target = role === "admin" ? "/admin" : role === "professional" ? "/profissional" : "/paciente";
-    void navigate({ to: target });
+    if (role === "admin") void navigate({ to: "/admin" });
+    else if (role === "professional") void navigate({ to: "/profissional" });
+    else void navigate({ to: "/paciente" });
   };
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
