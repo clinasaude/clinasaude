@@ -5,6 +5,7 @@ import {toast} from "sonner";
 import {PortalLayout,Panel,Stat} from "@/components/clina/PortalLayout";
 import {RequireAuth} from "@/components/clina/RequireAuth";
 import {listPendingProfessionals,reviewProfessional} from "@/lib/clina-data";
+import type {PendingProfessional} from "@/lib/clina-types";
 import {Button} from "@/components/ui/button";
 export const Route=createFileRoute("/admin")({head:()=>({meta:[{title:"Super Painel — CLINA"}]}),component:Admin});
 function Admin(){const[tab,setTab]=useState("valid"),[queue,setQueue]=useState<any[]>([]),[loading,setLoading]=useState(true);
