@@ -1,107 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { CalendarDays, Users, FileLock2, Wallet, Lock } from "lucide-react";
-import { toast } from "sonner";
-import { PortalLayout as BasePortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
-import { RequireAuth } from "@/components/clina/RequireAuth";
-import type { ComponentProps } from "react";
-import { brl, splitConsultation } from "@/lib/finance";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-export const Route = createFileRoute("/profissional")({
-  head: () => ({ meta: [
-    { title: "Portal do profissional — CLINA" },
-    { name: "description", content: "Agenda, CRM de pacientes, prontuário eletrônico sigiloso e extrato financeiro." },
-    { property: "og:title", content: "Portal do profissional — CLINA" },
-    { property: "og:description", content: "Gerencie sua clínica digital na CLINA." },
-  ] }),
-  component: Pro,
-});
-
-const nav = [
-  { key: "agenda", label: "Agenda", icon: CalendarDays },
-  { key: "crm", label: "Pacientes (CRM)", icon: Users },
-  { key: "pront", label: "Prontuário", icon: FileLock2 },
-  { key: "fin", label: "Extrato financeiro", icon: Wallet },
-];
-const patients = [
-  { name: "Lucas Martins", status: "Ativo", sessions: 12, last: "19/11", tag: "Ansiedade" },
-  { name: "Beatriz Rocha", status: "Ativo", sessions: 5, last: "21/11", tag: "Autoestima" },
-  { name: "Felipe Duarte", status: "Em pausa", sessions: 20, last: "02/10", tag: "Burnout" },
-  { name: "Camila Nunes", status: "Novo", sessions: 0, last: "—", tag: "Triagem" },
-];
-const slots = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
-const booked: Record<string, string> = { "Seg-09:00": "Beatriz R.", "Seg-18:00": "Lucas M.", "Ter-14:00": "Camila N.", "Qua-10:00": "Felipe D.", "Qui-18:00": "Lucas M." };
-const tx = [
-  { date: "21/11", patient: "Beatriz Rocha", gross: 150 },
-  { date: "19/11", patient: "Lucas Martins", gross: 150 },
-  { date: "18/11", patient: "Camila Nunes", gross: 150 },
-  { date: "14/11", patient: "Felipe Duarte", gross: 150 },
-];
-
-function PortalLayout(props: ComponentProps<typeof BasePortalLayout>) {
-  return <RequireAuth allowedRoles={["professional"]}><BasePortalLayout {...props} /></RequireAuth>;
-}
-
-function Pro() {
-  const [tab, setTab] = useState("agenda");
-  const [sel, setSel] = useState(patients[0]!.name);
-  const [notes, setNotes] = useState<Record<string, { date: string; text: string }[]>>({ "Lucas Martins": [{ date: "19/11", text: "Paciente relata melhora no sono. Mantida técnica de reestruturação cognitiva." }] });
-  const [draft, setDraft] = useState("");
-  const total = tx.reduce((s, t) => s + splitConsultation(t.gross).professional, 0);
-  return (
-    <PortalLayout title={nav.find((n) => n.key === tab)!.label} role="Profissional · Dra. Ana Ribeiro" nav={nav} active={tab} onChange={setTab}>
-      {tab === "agenda" && (
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-4"><Stat label="Sessões na semana" value="5" /><Stat label="Taxa de ocupação" value="62%" /><Stat label="Pacientes ativos" value="3" hint="Plano Free: até 10" /><Stat label="Plano" value="Free" hint="Premium R$ 59,90/mês" /></div>
-          <Panel title="Semana de 25 a 29/11">
-            <div className="overflow-x-auto"><div className="grid min-w-[640px] grid-cols-6 gap-1 text-sm">
-              <div />{["Seg", "Ter", "Qua", "Qui", "Sex"].map((d) => <div key={d} className="py-2 text-center font-semibold">{d}</div>)}
-              {slots.map((h) => [<div key={h} className="py-2 text-xs text-muted-foreground">{h}</div>, ...["Seg", "Ter", "Qua", "Qui", "Sex"].map((d) => {
-                const b = booked[`${d}-${h}`];
-                return <div key={d + h} className={`rounded-md px-2 py-2 text-xs ${b ? "bg-primary text-primary-foreground" : "bg-muted/60"}`}>{b ?? ""}</div>;
-              })])}
-            </div></div>
-          </Panel>
-        </div>
-      )}
-      {tab === "crm" && (
-        <Panel title="Pacientes">
-          <Table><TableHeader><TableRow><TableHead>Paciente</TableHead><TableHead>Status</TableHead><TableHead>Sessões</TableHead><TableHead>Última</TableHead><TableHead>Tag</TableHead><TableHead /></TableRow></TableHeader>
-            <TableBody>{patients.map((p) => (
-              <TableRow key={p.name}><TableCell className="font-semibold">{p.name}</TableCell><TableCell>{p.status}</TableCell><TableCell>{p.sessions}</TableCell><TableCell>{p.last}</TableCell>
-                <TableCell><span className="rounded-full bg-accent px-2 py-0.5 text-xs text-primary">{p.tag}</span></TableCell>
-                <TableCell><Button size="sm" variant="ghost" onClick={() => { setSel(p.name); setTab("pront"); }}>Prontuário</Button></TableCell></TableRow>
-            ))}</TableBody></Table>
-        </Panel>
-      )}
-      {tab === "pront" && (
-        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-          <Panel title="Pacientes">{patients.map((p) => (
-            <button key={p.name} onClick={() => setSel(p.name)} className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${sel === p.name ? "bg-accent font-semibold text-primary" : "hover:bg-muted"}`}>{p.name}</button>
-          ))}</Panel>
-          <Panel title={`Prontuário — ${sel}`} action={<span className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground"><Lock className="h-3 w-3" /> Sigilo absoluto</span>}>
-            <p className="mb-4 rounded-xl bg-muted p-3 text-xs text-muted-foreground">Acesso restrito ao profissional responsável. Nem a administração da CLINA visualiza o conteúdo. Cada acesso é registrado na auditoria.</p>
-            <Textarea rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Evolução da sessão..." />
-            <Button className="mt-3 rounded-full" disabled={!draft.trim()} onClick={() => { setNotes({ ...notes, [sel]: [{ date: "Hoje", text: draft.trim() }, ...(notes[sel] ?? [])] }); setDraft(""); toast.success("Evolução registrada"); }}>Registrar evolução</Button>
-            <div className="mt-6 space-y-3">{(notes[sel] ?? []).map((n, i) => <div key={i} className="rounded-xl border border-border p-4"><p className="text-xs font-semibold text-muted-foreground">{n.date}</p><p className="mt-1 text-sm">{n.text}</p></div>)}
-              {!(notes[sel] ?? []).length && <p className="text-sm text-muted-foreground">Nenhuma evolução registrada.</p>}</div>
-          </Panel>
-        </div>
-      )}
-      {tab === "fin" && (
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3"><Stat label="Bruto em novembro" value={brl(tx.length * 150)} /><Stat label="Líquido (80%)" value={brl(total)} hint="Antes de taxas externas" /><Stat label="Próximo repasse" value="05/12" /></div>
-          <Panel title="Extrato">
-            <Table><TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Paciente</TableHead><TableHead>Valor</TableHead><TableHead>Comissão CLINA (20%)</TableHead><TableHead>Seu repasse (80%)</TableHead></TableRow></TableHeader>
-              <TableBody>{tx.map((t, i) => { const s = splitConsultation(t.gross); return (
-                <TableRow key={i}><TableCell>{t.date}</TableCell><TableCell>{t.patient}</TableCell><TableCell>{brl(t.gross)}</TableCell><TableCell className="text-muted-foreground">−{brl(s.platform)}</TableCell><TableCell className="font-semibold text-primary">{brl(s.professional)}</TableCell></TableRow>
-              ); })}</TableBody></Table>
-          </Panel>
-        </div>
-      )}
-    </PortalLayout>
-  );
+import {createFileRoute} from "@tanstack/react-router";
+import {useEffect,useState} from "react";
+import {CalendarDays,FileLock2,Wallet} from "lucide-react";
+import {toast} from "sonner";
+import {PortalLayout,Panel,Stat} from "@/components/clina/PortalLayout";
+import {RequireAuth} from "@/components/clina/RequireAuth";
+import {useAuth} from "@/components/clina/AuthProvider";
+import {listMyAppointments,listMyClinicalRecords,saveClinicalRecord,listMyTransactions} from "@/lib/clina-data";
+import {Button} from "@/components/ui/button";
+import {Textarea} from "@/components/ui/textarea";
+export const Route=createFileRoute("/profissional")({head:()=>({meta:[{title:"Portal profissional — CLINA"}]}),component:Professional});
+function Professional(){const{user}=useAuth();const[tab,setTab]=useState("agenda"),[appointments,setAppointments]=useState<any[]>([]),[records,setRecords]=useState<any[]>([]),[transactions,setTransactions]=useState<any[]>([]),[selected,setSelected]=useState<any|null>(null),[draft,setDraft]=useState(""),[loading,setLoading]=useState(true);
+ useEffect(()=>{if(!user)return;let active=true;Promise.all([listMyAppointments(user.id,"professional"),listMyTransactions(user.id)]).then(([a,t])=>{if(active){setAppointments(a);setTransactions(t)}}).catch(e=>toast.error(e instanceof Error?e.message:"Falha ao carregar agenda.")).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[user]);
+ async function openRecord(a:any){setSelected(a);try{const r=await listMyClinicalRecords(user!.id,a.id);setRecords(r);}catch(e){toast.error(e instanceof Error?e.message:"Acesso ao prontuário negado.");}}
+ async function save(){if(!user||!selected||!draft.trim())return;try{await saveClinicalRecord({appointment_id:selected.id,patient_id:selected.patient_id,professional_id:user.id,record_type:"note",title:"Evolução de sessão",content:draft.trim()});setDraft("");await openRecord(selected);toast.success("Evolução registrada no prontuário sigiloso.");}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível salvar o prontuário.");}}
+ const nav=[{key:"agenda",label:"Agenda",icon:CalendarDays},{key:"pront",label:"Prontuário",icon:FileLock2},{key:"fin",label:"Extrato financeiro",icon:Wallet}];
+ return <RequireAuth allowedRoles={["professional"]}><PortalLayout title={nav.find(n=>n.key===tab)?.label??"Portal"} role="Profissional" nav={nav} active={tab} onChange={setTab}>
+ {tab==="agenda"?<div className="space-y-5"><div className="grid gap-4 md:grid-cols-2"><Stat label="Consultas" value={String(appointments.length)}/><Stat label="Próximas consultas" value={String(appointments.filter(a=>new Date(a.starts_at)>new Date()).length)}/></div><Panel title="Agenda">{loading?"Carregando…":appointments.length?appointments.map(a=><div key={a.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-4 last:border-0"><div><p className="font-semibold">{new Date(a.starts_at).toLocaleString("pt-BR",{dateStyle:"medium",timeStyle:"short",timeZone:"America/Sao_Paulo"})}</p><p className="text-xs text-muted-foreground">Agendamento {a.id.slice(0,8)} · {a.status}</p></div><Button size="sm" variant="outline" onClick={()=>{void openRecord(a);setTab("pront")}}>Abrir prontuário</Button></div>):<p className="text-sm text-muted-foreground">Nenhum agendamento vinculado à sua conta.</p>}</Panel></div>:tab==="pront"?<Panel title="Prontuário eletrônico — acesso restrito ao profissional titular"><p className="mb-4 text-xs text-muted-foreground">Selecione uma consulta da sua agenda. Pacientes e administradores não recebem acesso às anotações clínicas.</p>{!selected?<p className="text-sm text-muted-foreground">Abra um prontuário pela agenda.</p>:<><p className="mb-3 text-sm">Consulta {selected.id.slice(0,8)} · {new Date(selected.starts_at).toLocaleDateString("pt-BR")}</p><Textarea rows={5} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Evolução clínica da sessão…"/><Button className="mt-3" disabled={!draft.trim()} onClick={()=>void save()}>Salvar evolução</Button><div className="mt-5 space-y-3">{records.map(r=><div key={r.id} className="rounded-xl border p-3"><p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</p><p className="whitespace-pre-wrap text-sm">{r.content}</p></div>)}</div></>}</Panel>:<Panel title="Transações e repasses">{transactions.length?transactions.map(t=><div key={t.id} className="flex justify-between border-b py-3 text-sm"><span>{new Date(t.created_at).toLocaleDateString("pt-BR")} · {t.payout_status}</span><b>R$ {(t.professional_payout_cents/100).toFixed(2)}</b></div>):<p className="text-sm text-muted-foreground">Nenhuma transação registrada. Pagamentos ainda não foram integrados.</p>}</Panel>}
+ </PortalLayout></RequireAuth>;
 }
