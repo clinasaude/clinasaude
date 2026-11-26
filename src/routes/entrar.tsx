@@ -33,11 +33,11 @@ function Login() {
   }, []);
 
   useEffect(() => {
-    if (!user || authLoading || !profile) return;
+    if (!user || authLoading || !profile || mode === "new-password" || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("redefinir") === "1")) return;
     if (profile.role === "admin") void navigate({ to: "/admin" });
     else if (profile.role === "professional") void navigate({ to: "/profissional" });
     else void navigate({ to: "/paciente" });
-  }, [user, authLoading, profile, navigate]);
+  }, [user, authLoading, profile, navigate, mode]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,7 +77,6 @@ function Login() {
           <Link to="/" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"><ArrowLeft className="h-3.5 w-3.5" /> Voltar ao site</Link>
           <h1 className="mt-5 text-3xl text-primary">{mode === "login" ? "Bem-vindo de volta" : mode === "signup" ? "Crie sua conta" : mode === "new-password" ? "Defina uma nova senha" : "Recuperar senha"}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{mode === "login" ? "Entre para acessar seu espaço de cuidado." : mode === "signup" ? "Cadastre-se como paciente para começar." : mode === "new-password" ? "Escolha uma nova senha com pelo menos 8 caracteres." : "Enviaremos instruções para seu e-mail."}</p>
-          {!configured && <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">A autenticação está implementada, mas falta configurar a chave publicável no ambiente de hospedagem. Os portais continuam bloqueados.</p>}
           <form onSubmit={submit} className="mt-7 space-y-4">
             {mode === "signup" && <>
               <label className="block text-sm font-medium">Nome completo</label>
@@ -85,8 +84,8 @@ function Login() {
               <label className="block text-sm font-medium">Telefone (opcional)</label>
               <Input autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
             </>}
-            <label className="block text-sm font-medium">E-mail</label>
-            <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" className="pl-10" /></div>
+            {mode !== "new-password" && <><label className="block text-sm font-medium">E-mail</label>
+            <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="voce@email.com" className="pl-10" /></div></>}
             {mode !== "reset" && <>
               <label className="block text-sm font-medium">Senha</label>
               <div className="relative"><LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input required type="password" minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres" className="pl-10" /></div>
