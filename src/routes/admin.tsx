@@ -3,7 +3,9 @@ import { useState } from "react";
 import { LayoutDashboard, BadgeCheck, Users, Percent, CreditCard, ScrollText, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Line, LineChart } from "recharts";
-import { PortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { PortalLayout as BasePortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { RequireAuth } from "@/components/clina/RequireAuth";
+import type { ComponentProps } from "react";
 import { brl, splitConsultation, PLATFORM_FEE, PRO_PREMIUM_PRICE, PATIENT_PLUS_PRICE } from "@/lib/finance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +48,10 @@ const audit = [
   { at: "25/11 19:02", who: "Felipe Duarte", act: "Solicitou exportação de dados (LGPD Art. 18)", ip: "177.22.x.x" },
   { at: "25/11 14:45", who: "admin@clina", act: "Alterou preço Premium", ip: "200.10.x.x" },
 ];
+
+function PortalLayout(props: ComponentProps<typeof BasePortalLayout>) {
+  return <RequireAuth allowedRoles={["admin"]}><BasePortalLayout {...props} /></RequireAuth>;
+}
 
 function Admin() {
   const [tab, setTab] = useState("dash");
