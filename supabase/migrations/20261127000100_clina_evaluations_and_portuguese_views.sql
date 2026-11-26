@@ -16,6 +16,7 @@ create index if not exists evaluations_professional_public_idx
 alter table public.evaluations enable row level security;
 revoke all on public.evaluations from anon, authenticated;
 grant select, insert, update on public.evaluations to authenticated;
+grant select on public.evaluations to anon;
 
 drop policy if exists evaluations_patient_read_own on public.evaluations;
 create policy evaluations_patient_read_own on public.evaluations
@@ -27,6 +28,7 @@ create policy evaluations_patient_insert_completed_appointment on public.evaluat
 for insert to authenticated
 with check (
   patient_id = (select auth.uid())
+  and is_public = false
   and exists (
     select 1 from public.appointments a
     where a.id = appointment_id
@@ -40,7 +42,28 @@ drop policy if exists evaluations_patient_update_own on public.evaluations;
 create policy evaluations_patient_update_own on public.evaluations
 for update to authenticated
 using (patient_id = (select auth.uid()))
-with check (patient_id = (select auth.uid()));
+with check (
+  patient_id = (select auth.uid())
+  and is_public = false
+  and exists (
+    select 1 from public.appointments a
+    where a.id = appointment_id
+      and a.patient_id = (select auth.uid())
+      and a.professional_id = evaluations.professional_id
+      and a.status::text = 'completed'
+  )
+);
+
+drop policy if exists evaluations_admin_read on public.evaluations;
+create policy evaluations_admin_read on public.evaluations
+for select to authenticated
+using (exists (select 1 from public.profiles p where p.id = (select auth.uid()) and p.role::text = 'admin'));
+
+drop policy if exists evaluations_admin_moderate on public.evaluations;
+create policy evaluations_admin_moderate on public.evaluations
+for update to authenticated
+using (exists (select 1 from public.profiles p where p.id = (select auth.uid()) and p.role::text = 'admin'))
+with check (exists (select 1 from public.profiles p where p.id = (select auth.uid()) and p.role::text = 'admin'));
 
 drop policy if exists evaluations_public_read on public.evaluations;
 create policy evaluations_public_read on public.evaluations
