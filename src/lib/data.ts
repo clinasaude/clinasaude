@@ -1,18 +1,10 @@
+// Static filter vocabulary only. All people, appointments, ratings and activity come from Supabase.
 export type Professional = {
-  id: string; name: string; category: "Psicologia" | "Psiquiatria" | "Psicanálise";
-  register: string; education: string; approach: string; specialties: string[];
-  audience: string[]; rating: number; reviews: number; price: number; duration: number;
-  nextSlot: string; online: boolean; photo: string; bio: string;
+  id: string; user_id: string; public_name: string; category: string;
+  registration_type: string; registration_number: string; registration_state: string | null;
+  biography: string | null; specialties: string[]; approaches: string[]; audiences: string[];
+  session_price_cents: number; session_duration_minutes: number; rating: number | null; reviews_count: number;
 };
-const p = (n: number) => `https://i.pravatar.cc/320?img=${n}`;
-export const professionals: Professional[] = [
-  { id: "ana-ribeiro", name: "Dra. Ana Ribeiro", category: "Psicologia", register: "CRP 06/123456", education: "Mestre em Psicologia Clínica — USP", approach: "TCC", specialties: ["Ansiedade", "Depressão", "Autoestima"], audience: ["Adultos"], rating: 4.9, reviews: 182, price: 150, duration: 50, nextSlot: "Hoje, 18:00", online: true, photo: p(47), bio: "Atendo adultos que buscam lidar com ansiedade e reconstruir uma relação mais gentil consigo mesmos." },
-  { id: "carlos-mendes", name: "Dr. Carlos Mendes", category: "Psiquiatria", register: "CRM-SP 98765", education: "Residência em Psiquiatria — UNIFESP", approach: "Psiquiatria integrativa", specialties: ["TDAH", "Bipolaridade", "Insônia"], audience: ["Adultos", "Idosos"], rating: 4.8, reviews: 96, price: 320, duration: 40, nextSlot: "Amanhã, 09:30", online: true, photo: p(12), bio: "Cuidado psiquiátrico humanizado, com escuta atenta e decisões compartilhadas." },
-  { id: "juliana-costa", name: "Juliana Costa", category: "Psicanálise", register: "Membro SBPSP", education: "Formação em Psicanálise — SBPSP", approach: "Psicanálise", specialties: ["Luto", "Relacionamentos"], audience: ["Adultos"], rating: 4.9, reviews: 64, price: 180, duration: 50, nextSlot: "Qui, 14:00", online: true, photo: p(44), bio: "Um espaço de escuta para elaborar perdas, vínculos e a própria história." },
-  { id: "rafael-lima", name: "Rafael Lima", category: "Psicologia", register: "CRP 05/654321", education: "Especialista em Terapia Familiar — PUC-Rio", approach: "Sistêmica", specialties: ["Casais", "Família", "Adolescentes"], audience: ["Adolescentes", "Casais"], rating: 4.7, reviews: 51, price: 130, duration: 50, nextSlot: "Hoje, 20:00", online: true, photo: p(15), bio: "Trabalho com famílias e casais para fortalecer a comunicação e o cuidado mútuo." },
-  { id: "marina-souza", name: "Dra. Marina Souza", category: "Psicologia", register: "CRP 04/112233", education: "Doutora em Neuropsicologia — UFMG", approach: "ACT", specialties: ["Burnout", "Estresse", "Carreira"], audience: ["Adultos"], rating: 5.0, reviews: 38, price: 200, duration: 50, nextSlot: "Sex, 10:00", online: true, photo: p(32), bio: "Ajudo profissionais a recuperar energia e sentido no trabalho e na vida." },
-  { id: "pedro-alves", name: "Dr. Pedro Alves", category: "Psiquiatria", register: "CRM-RJ 44556", education: "Psiquiatria da Infância — UFRJ", approach: "Psiquiatria infantojuvenil", specialties: ["TEA", "TDAH", "Ansiedade"], audience: ["Crianças", "Adolescentes"], rating: 4.8, reviews: 73, price: 350, duration: 50, nextSlot: "Seg, 16:00", online: true, photo: p(53), bio: "Acompanhamento psiquiátrico para crianças, adolescentes e suas famílias." },
-];
-export const specialties = ["Ansiedade", "Depressão", "Burnout", "Luto", "Relacionamentos", "TDAH", "Autoestima", "Insônia"];
-export const approaches = ["TCC", "ACT", "Psicanálise", "Sistêmica", "Psiquiatria integrativa", "Psiquiatria infantojuvenil"];
-export const audiences = ["Crianças", "Adolescentes", "Adultos", "Idosos", "Casais"];
+export const specialties = ["Ansiedade","Depressão","Burnout","Luto","Relacionamentos","TDAH","Autoestima","Insônia"];
+export const approaches = ["TCC","ACT","Psicanálise","Sistêmica","Psiquiatria integrativa","Psiquiatria infantojuvenil"];
+export const audiences = ["Crianças","Adolescentes","Adultos","Idosos","Casais"];
