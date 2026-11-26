@@ -3,7 +3,9 @@ import { useState } from "react";
 import { CalendarDays, Video, BookHeart, SmilePlus, Mic, MicOff, PhoneOff, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { PortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { PortalLayout as BasePortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { RequireAuth } from "@/components/clina/RequireAuth";
+import type { ComponentProps } from "react";
 import { professionals } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +28,10 @@ const nav = [
 ];
 const moods = ["😔", "😕", "😐", "🙂", "😊"];
 const week = [3, 2, 4, 3, 4, 5, 4].map((v, i) => ({ d: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"][i], humor: v }));
+
+function PortalLayout(props: ComponentProps<typeof BasePortalLayout>) {
+  return <RequireAuth allowedRoles={["patient"]}><BasePortalLayout {...props} /></RequireAuth>;
+}
 
 function Patient() {
   const [tab, setTab] = useState("agenda");
