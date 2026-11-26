@@ -195,14 +195,14 @@ create policy "profiles_select_self_or_admin" on public.profiles for select to a
 using (id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
 create function public.guard_profile_role_change()
 returns trigger language plpgsql set search_path = ''
-as $
+as $clina_guard$
 begin
   if new.role is distinct from old.role then
     raise exception 'Profile role can only be changed by trusted server-side code';
   end if;
   return new;
 end;
-$;
+$clina_guard$;
 revoke all on function public.guard_profile_role_change() from public, anon, authenticated;
 create trigger profiles_guard_role
 before update on public.profiles
@@ -218,14 +218,14 @@ create policy "professionals_insert_self" on public.professional_profiles for in
 with check (user_id = (select auth.uid()) and (select public.jwt_app_role()) = 'professional');
 create function public.guard_professional_approval()
 returns trigger language plpgsql set search_path = ''
-as $
+as $clina_guard$
 begin
   if new.status is distinct from old.status or new.reviewed_at is distinct from old.reviewed_at then
     raise exception 'Professional approval fields can only be changed by trusted server-side code';
   end if;
   return new;
 end;
-$;
+$clina_guard$;
 revoke all on function public.guard_professional_approval() from public, anon, authenticated;
 create trigger professional_profiles_guard_approval
 before update on public.professional_profiles
