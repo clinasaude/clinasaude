@@ -107,6 +107,9 @@ create policy professionals_admin_read_pending on public.professional_profiles
 -- Availability: public reads only future open slots of approved professionals.
 drop policy if exists availability_public_read on public.availability_slots;
 drop policy if exists availability_professional_manage on public.availability_slots;
+drop policy if exists availability_professional_insert on public.availability_slots;
+drop policy if exists availability_professional_update on public.availability_slots;
+drop policy if exists availability_professional_delete on public.availability_slots;
 create policy availability_public_read on public.availability_slots
   for select to anon, authenticated using (
     is_available = true and starts_at > now()
