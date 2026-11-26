@@ -193,6 +193,21 @@ alter table public.audit_logs enable row level security;
 
 create policy "profiles_select_self_or_admin" on public.profiles for select to authenticated
 using (id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
+create function public.guard_profile_role_change()
+returns trigger language plpgsql set search_path = ''
+as $clina_guard$
+begin
+  if new.role is distinct from old.role then
+    raise exception 'Profile role can only be changed by trusted server-side code';
+  end if;
+  return new;
+end;
+$clina_guard$;
+revoke all on function public.guard_profile_role_change() from public, anon, authenticated;
+create trigger profiles_guard_role
+before update on public.profiles
+for each row execute function public.guard_profile_role_change();
+
 create policy "profiles_update_self" on public.profiles for update to authenticated
 using (id = (select auth.uid()))
 with check (id = (select auth.uid()));
@@ -201,6 +216,21 @@ create policy "professionals_public_approved" on public.professional_profiles fo
 using (status = 'approved' or user_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
 create policy "professionals_insert_self" on public.professional_profiles for insert to authenticated
 with check (user_id = (select auth.uid()) and (select public.jwt_app_role()) = 'professional');
+create function public.guard_professional_approval()
+returns trigger language plpgsql set search_path = ''
+as $clina_guard$
+begin
+  if new.status is distinct from old.status or new.reviewed_at is distinct from old.reviewed_at then
+    raise exception 'Professional approval fields can only be changed by trusted server-side code';
+  end if;
+  return new;
+end;
+$clina_guard$;
+revoke all on function public.guard_professional_approval() from public, anon, authenticated;
+create trigger professional_profiles_guard_approval
+before update on public.professional_profiles
+for each row execute function public.guard_professional_approval();
+
 create policy "professionals_update_self_or_admin" on public.professional_profiles for update to authenticated
 using (user_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin')
 with check (user_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
@@ -213,11 +243,8 @@ with check (professional_id = (select auth.uid()) or (select public.jwt_app_role
 
 create policy "appointments_participants_read" on public.appointments for select to authenticated
 using (patient_id = (select auth.uid()) or professional_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
-create policy "appointments_patient_create" on public.appointments for insert to authenticated
-with check (patient_id = (select auth.uid()));
-create policy "appointments_participants_update" on public.appointments for update to authenticated
-using (patient_id = (select auth.uid()) or professional_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin')
-with check (patient_id = (select auth.uid()) or professional_id = (select auth.uid()) or (select public.jwt_app_role()) = 'admin');
+-- Appointment writes are intentionally server-only. A trusted booking endpoint must
+-- lock the availability slot, validate the approved professional and price, then insert atomically.
 
 create policy "clinical_records_participants_read" on public.clinical_records for select to authenticated
 using (
@@ -258,5 +285,17 @@ using (exists (select 1 from public.course_enrollments e where e.id = enrollment
 create policy "certificates_owner_read" on public.certificates for select to authenticated
 using (exists (select 1 from public.course_enrollments e where e.id = enrollment_id and e.user_id = (select auth.uid())) or (select public.jwt_app_role()) = 'admin');
 
--- Audit logs are server-written only; no client policies are intentionally provided.
+-- Explicit grants: Supabase's current Data API defaults no longer expose new tables automatically.
+grant select on public.professional_profiles, public.availability_slots, public.courses, public.course_lessons to anon, authenticated;
+grant select on public.profiles, public.appointments, public.clinical_records, public.emotional_entries,
+  public.payments, public.subscriptions, public.course_enrollments, public.course_attempts, public.certificates to authenticated;
+grant update on public.profiles to authenticated;
+grant insert, update, delete on public.emotional_entries to authenticated;
+grant insert, update on public.professional_profiles to authenticated;
+grant insert, update, delete on public.availability_slots to authenticated;
+
+-- Clinical, financial, appointment, subscription, and course mutations are server-only.
+revoke insert, update, delete on public.appointments, public.clinical_records, public.payments,
+  public.subscriptions, public.courses, public.course_lessons, public.course_enrollments,
+  public.course_attempts, public.certificates from anon, authenticated;
 revoke all on public.audit_logs from anon, authenticated;
