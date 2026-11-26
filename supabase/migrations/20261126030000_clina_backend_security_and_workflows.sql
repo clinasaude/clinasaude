@@ -155,8 +155,6 @@ grant select on public.appointments to authenticated;
 drop policy if exists clinical_records_participants_read on public.medical_records;
 drop policy if exists clinical_records_professional_insert on public.medical_records;
 drop policy if exists clinical_records_professional_update on public.medical_records;
-drop policy if exists clinical_records_professional_insert on public.medical_records;
-drop policy if exists clinical_records_professional_update on public.medical_records;
 drop policy if exists medical_records_professional_only on public.medical_records;
 create policy medical_records_assigned_professional_only on public.medical_records
   for all to authenticated
