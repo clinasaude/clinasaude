@@ -6,12 +6,13 @@ import {PortalLayout,Panel,Stat} from "@/components/clina/PortalLayout";
 import {RequireAuth} from "@/components/clina/RequireAuth";
 import {useAuth} from "@/components/clina/AuthProvider";
 import {listMyAppointments,listMyClinicalRecords,saveClinicalRecord,listMyTransactions} from "@/lib/clina-data";
+import type {ClinaAppointment,ClinaClinicalRecord,ClinaTransaction} from "@/lib/clina-types";
 import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 export const Route=createFileRoute("/profissional")({head:()=>({meta:[{title:"Portal profissional — CLINA"}]}),component:Professional});
-function Professional(){const{user}=useAuth();const[tab,setTab]=useState("agenda"),[appointments,setAppointments]=useState<any[]>([]),[records,setRecords]=useState<any[]>([]),[transactions,setTransactions]=useState<any[]>([]),[selected,setSelected]=useState<any|null>(null),[draft,setDraft]=useState(""),[loading,setLoading]=useState(true);
+function Professional(){const{user}=useAuth();const[tab,setTab]=useState("agenda"),[appointments,setAppointments]=useState<any[]>([]),[records,setRecords]=useState<any[]>([]),[transactions,setTransactions]=useState<any[]>([]),[selected,setSelected]=useState<ClinaAppointment|null>(null),[draft,setDraft]=useState(""),[loading,setLoading]=useState(true);
  useEffect(()=>{if(!user)return;let active=true;Promise.all([listMyAppointments(user.id,"professional"),listMyTransactions(user.id)]).then(([a,t])=>{if(active){setAppointments(a);setTransactions(t)}}).catch(e=>toast.error(e instanceof Error?e.message:"Falha ao carregar agenda.")).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[user]);
- async function openRecord(a:any){setSelected(a);try{const r=await listMyClinicalRecords(user!.id,a.id);setRecords(r);}catch(e){toast.error(e instanceof Error?e.message:"Acesso ao prontuário negado.");}}
+ async function openRecord(a:ClinaAppointment){setSelected(a);try{const r=await listMyClinicalRecords(user!.id,a.id);setRecords(r);}catch(e){toast.error(e instanceof Error?e.message:"Acesso ao prontuário negado.");}}
  async function save(){if(!user||!selected||!draft.trim())return;try{await saveClinicalRecord({appointment_id:selected.id,patient_id:selected.patient_id,professional_id:user.id,record_type:"note",title:"Evolução de sessão",content:draft.trim()});setDraft("");await openRecord(selected);toast.success("Evolução registrada no prontuário sigiloso.");}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível salvar o prontuário.");}}
  const nav=[{key:"agenda",label:"Agenda",icon:CalendarDays},{key:"pront",label:"Prontuário",icon:FileLock2},{key:"fin",label:"Extrato financeiro",icon:Wallet}];
  return <RequireAuth allowedRoles={["professional"]}><PortalLayout title={nav.find(n=>n.key===tab)?.label??"Portal"} role="Profissional" nav={nav} active={tab} onChange={setTab}>
