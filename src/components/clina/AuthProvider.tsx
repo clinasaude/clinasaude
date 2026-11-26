@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: { full_name: fullName.trim(), ...(phone?.trim() ? { phone: phone.trim() } : {}) },
-        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/entrar` : undefined,
+        ...(typeof window !== "undefined" ? { emailRedirectTo: `${window.location.origin}/entrar` } : {}),
       },
     });
     if (error) throw error;
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = useCallback(async (email: string) => {
     if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: typeof window !== "undefined" ? `${window.location.origin}/redefinir-senha` : undefined,
+      ...(typeof window !== "undefined" ? { redirectTo: `${window.location.origin}/entrar?redefinir=1` } : {}),
     });
     if (error) throw error;
   }, []);
