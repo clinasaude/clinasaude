@@ -13,6 +13,7 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: { fullName: string; phone?: string; email: string; password: string }) => Promise<boolean>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -96,6 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const updatePassword = useCallback(async (password: string) => {
+    if (!supabase) throw new Error("A autenticação ainda não foi configurada neste ambiente.");
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
@@ -104,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => ({
     session, user: session?.user ?? null, profile, loading, configured: isSupabaseConfigured,
-    signIn, signUp, resetPassword, signOut, refreshProfile,
-  }), [session, profile, loading, signIn, signUp, resetPassword, signOut, refreshProfile]);
+    signIn, signUp, resetPassword, updatePassword, signOut, refreshProfile,
+  }), [session, profile, loading, signIn, signUp, resetPassword, updatePassword, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
