@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarDays, Users, FileLock2, Wallet, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { PortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { PortalLayout as BasePortalLayout, Panel, Stat } from "@/components/clina/PortalLayout";
+import { RequireAuth } from "@/components/clina/RequireAuth";
+import type { ComponentProps } from "react";
 import { brl, splitConsultation } from "@/lib/finance";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +40,10 @@ const tx = [
   { date: "18/11", patient: "Camila Nunes", gross: 150 },
   { date: "14/11", patient: "Felipe Duarte", gross: 150 },
 ];
+
+function PortalLayout(props: ComponentProps<typeof BasePortalLayout>) {
+  return <RequireAuth allowedRoles={["professional"]}><BasePortalLayout {...props} /></RequireAuth>;
+}
 
 function Pro() {
   const [tab, setTab] = useState("agenda");
