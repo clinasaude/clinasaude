@@ -6,6 +6,7 @@ import {PortalLayout,Panel,Stat} from "@/components/clina/PortalLayout";
 import {RequireAuth} from "@/components/clina/RequireAuth";
 import {useAuth} from "@/components/clina/AuthProvider";
 import {listMyAppointments,listMyDiary,saveDiaryEntry} from "@/lib/clina-data";
+import type {ClinaAppointment,ClinaDiaryEntry} from "@/lib/clina-types";
 import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 export const Route=createFileRoute("/paciente")({head:()=>({meta:[{title:"Portal do paciente — CLINA"}]}),component:Patient});
