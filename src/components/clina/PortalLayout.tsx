@@ -23,7 +23,7 @@ export function PortalLayout({ title, role, nav, active, onChange, children }: {
             </button>
           ))}
         </nav>
-        <div className="mt-auto rounded-xl bg-sidebar-accent p-3 text-xs opacity-90">Dados em modo demonstração. Conecte o backend para persistir.</div>
+        <div className="mt-auto rounded-xl bg-sidebar-accent p-3 text-xs opacity-90">Dados carregados com controle de acesso da CLINA.</div>
       </aside>
       <div className="flex-1 min-w-0">
         <header className="flex h-16 items-center justify-between border-b border-border bg-surface px-6">
