@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Mail, LockKeyhole, UserRound, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -27,11 +27,12 @@ function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const goToPortal = (role?: string) => {
-    if (role === "admin") void navigate({ to: "/admin" });
-    else if (role === "professional") void navigate({ to: "/profissional" });
+  useEffect(() => {
+    if (!user || authLoading || !profile) return;
+    if (profile.role === "admin") void navigate({ to: "/admin" });
+    else if (profile.role === "professional") void navigate({ to: "/profissional" });
     else void navigate({ to: "/paciente" });
-  };
+  }, [user, authLoading, profile, navigate]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,10 +57,7 @@ function Login() {
     } finally { setBusy(false); }
   }
 
-  if (user && !authLoading) {
-    if (profile) goToPortal(profile.role);
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Abrindo seu portal seguro…</div>;
-  }
+  if (user && !authLoading) return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Abrindo seu portal seguro…</div>;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
